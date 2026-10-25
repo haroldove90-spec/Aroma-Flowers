@@ -13,6 +13,10 @@ import {
   Flower2,
   Sparkles,
   Tablet,
+  CreditCard,
+  FileSpreadsheet,
+  AlertOctagon,
+  ThermometerSnowflake,
 } from 'lucide-react';
 import { useGreenhouse } from '../../context/GreenhouseContext';
 
@@ -25,8 +29,9 @@ export const BottomBar: React.FC = () => {
       case 'director':
         return [
           { id: 'principal', label: 'KPIs', icon: LayoutDashboard },
-          { id: 'finanzas', label: 'Finanzas', icon: Wallet },
+          { id: 'finanzas', label: 'Tesorería', icon: Wallet },
           { id: 'costos', label: 'Costos', icon: TrendingUp },
+          { id: 'deudas', label: 'Créditos', icon: CreditCard },
           { id: 'workflow', label: 'Flujo', icon: GitBranch },
         ];
       case 'operaciones':
@@ -34,6 +39,7 @@ export const BottomBar: React.FC = () => {
           { id: 'principal', label: 'Módulos', icon: Building2 },
           { id: 'personal', label: 'Personal', icon: Users },
           { id: 'almacen', label: 'Almacén', icon: Boxes },
+          { id: 'activos', label: 'Activos', icon: Building2 },
           { id: 'workflow', label: 'Flujo', icon: GitBranch },
         ];
       case 'agronomo':
@@ -47,7 +53,8 @@ export const BottomBar: React.FC = () => {
         return [
           { id: 'principal', label: 'Corte', icon: Flower2 },
           { id: 'clasificacion', label: 'Empaque', icon: Boxes },
-          { id: 'camara', label: 'Cámara', icon: Sparkles },
+          { id: 'merma', label: 'Merma', icon: AlertOctagon },
+          { id: 'camara', label: 'Cámara', icon: ThermometerSnowflake },
           { id: 'workflow', label: 'Flujo', icon: GitBranch },
         ];
       case 'ventas':
@@ -62,6 +69,7 @@ export const BottomBar: React.FC = () => {
           { id: 'principal', label: 'Campo', icon: Tablet },
           { id: 'offline', label: 'Offline', icon: GitBranch },
           { id: 'auditoria', label: 'Auditoría', icon: LayoutDashboard },
+          { id: 'workflow', label: 'Flujo', icon: GitBranch },
         ];
       default:
         return [
@@ -74,7 +82,7 @@ export const BottomBar: React.FC = () => {
   const items = getBottomItems();
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200 px-2 py-1 shadow-lg flex items-center justify-around safe-bottom">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-emerald-900 border-t border-emerald-800 px-1.5 py-1.5 shadow-2xl flex items-center justify-around safe-bottom">
       {items.map((item) => {
         const Icon = item.icon;
         const isActive = activeView === item.id;
@@ -82,14 +90,16 @@ export const BottomBar: React.FC = () => {
           <button
             key={item.id}
             onClick={() => setActiveView(item.id)}
-            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all duration-150 min-w-[60px] ${
+            className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all duration-150 min-w-[55px] ${
               isActive
-                ? 'text-emerald-700 font-bold bg-emerald-50/80 scale-105'
-                : 'text-slate-500 hover:text-slate-800'
+                ? 'bg-emerald-800 text-white font-bold ring-1 ring-emerald-400/50 scale-105 shadow-sm'
+                : 'text-emerald-100 hover:text-white hover:bg-emerald-800/40'
             }`}
           >
-            <Icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5px] text-emerald-600' : 'stroke-[1.75px]'}`} />
-            <span className="text-[11px] mt-1 tracking-tight leading-tight">{item.label}</span>
+            <Icon className="w-5 h-5 text-white stroke-[2.2px]" />
+            <span className="text-[10px] mt-1 tracking-tight text-white font-medium leading-tight truncate">
+              {item.label}
+            </span>
           </button>
         );
       })}

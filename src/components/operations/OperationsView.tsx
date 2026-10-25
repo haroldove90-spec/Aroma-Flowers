@@ -6,13 +6,10 @@ import {
   Settings,
   PlusCircle,
   AlertTriangle,
-  CheckCircle2,
-  Calendar,
-  Layers,
   MapPin,
-  Wrench,
   Search,
-  Truck,
+  Wrench,
+  CheckCircle2,
 } from 'lucide-react';
 import { useGreenhouse } from '../../context/GreenhouseContext';
 import { GreenhouseModule, Worker, InventoryItem, EquipmentAsset } from '../../types/greenhouse';
@@ -28,19 +25,7 @@ export const OperationsView: React.FC = () => {
     addWorker,
     updateWorkerAttendance,
     addInventoryItem,
-    updateInventoryStock,
   } = useGreenhouse();
-
-  // Internal tab state if navigated from sidebar or default
-  const [currentTab, setCurrentTab] = useState<'modulos' | 'personal' | 'almacen' | 'activos'>(
-    activeView === 'personal'
-      ? 'personal'
-      : activeView === 'almacen'
-      ? 'almacen'
-      : activeView === 'activos'
-      ? 'activos'
-      : 'modulos'
-  );
 
   // Modals
   const [showAddModuleModal, setShowAddModuleModal] = useState(false);
@@ -85,9 +70,19 @@ export const OperationsView: React.FC = () => {
     setShowAddModuleModal(false);
   };
 
+  // Determine current active subview from sidebar without duplicate horizontal tabs
+  const currentView =
+    activeView === 'personal'
+      ? 'personal'
+      : activeView === 'almacen'
+      ? 'almacen'
+      : activeView === 'activos'
+      ? 'activos'
+      : 'modulos';
+
   return (
     <div className="space-y-6">
-      {/* Operations Header */}
+      {/* Operations Header (Clean, without horizontal duplicate tab bar) */}
       <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-800">
@@ -95,66 +90,58 @@ export const OperationsView: React.FC = () => {
             Administración & Jefatura de Operaciones
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
-            Gestión de Recursos, Producción y Personal
+            {currentView === 'personal'
+              ? 'Personal, Nómina & Cuadrillas de Trabajo'
+              : currentView === 'almacen'
+              ? 'Compras, Almacén & Catálogo de Insumos'
+              : currentView === 'activos'
+              ? 'Activos, Infraestructura & Mantenimiento'
+              : 'Unidades de Producción (Módulos & Camas)'}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Infraestructura física, catálogo de insumos, cuadrillas y maquinaria
+            {currentView === 'personal'
+              ? 'Registro de asistencia diaria, salarios, bonos y productividad de cuadrillas'
+              : currentView === 'almacen'
+              ? 'Existencias mínimas, lotes, caducidades, insumos y asignación de costos'
+              : currentView === 'activos'
+              ? 'Cámaras frías, cabezales de riego automatizado, maquinaria y bitácoras'
+              : 'Predios, naves M-01 a M-06, superficies m², densidades y variedades de flor'}
           </p>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl text-xs font-semibold">
-          <button
-            onClick={() => setCurrentTab('modulos')}
-            className={`px-3 py-1.5 rounded-lg transition ${
-              currentTab === 'modulos' ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Módulos ({modules.length})
-          </button>
-          <button
-            onClick={() => setCurrentTab('personal')}
-            className={`px-3 py-1.5 rounded-lg transition ${
-              currentTab === 'personal' ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Personal ({workers.length})
-          </button>
-          <button
-            onClick={() => setCurrentTab('almacen')}
-            className={`px-3 py-1.5 rounded-lg transition ${
-              currentTab === 'almacen' ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Almacén ({inventory.length})
-          </button>
-          <button
-            onClick={() => setCurrentTab('activos')}
-            className={`px-3 py-1.5 rounded-lg transition ${
-              currentTab === 'activos' ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Activos ({equipment.length})
-          </button>
-        </div>
-      </div>
-
-      {/* Sub-view: Módulos de Producción */}
-      {currentTab === 'modulos' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900">
-              Unidades de Producción (Invernaderos & Camas)
-            </h2>
+        {/* Action Button for Current View */}
+        <div>
+          {currentView === 'modulos' && (
             <button
               onClick={() => setShowAddModuleModal(true)}
-              className="flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs"
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Nuevo Módulo</span>
             </button>
-          </div>
+          )}
 
+          {currentView === 'personal' && (
+            <div className="text-xs font-semibold px-3 py-1.5 bg-emerald-50 text-emerald-800 rounded-lg border border-emerald-200">
+              {workers.filter((w) => w.attendanceToday === 'presente').length} de {workers.length} Presentes Hoy
+            </div>
+          )}
+
+          {currentView === 'almacen' && (
+            <input
+              type="text"
+              placeholder="Buscar insumo..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-hidden focus:ring-2 focus:ring-emerald-500"
+            />
+          )}
+        </div>
+      </div>
+
+      {/* 1. View: Módulos de Producción */}
+      {currentView === 'modulos' && (
+        <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {modules.map((m) => (
               <div
@@ -216,21 +203,9 @@ export const OperationsView: React.FC = () => {
         </div>
       )}
 
-      {/* Sub-view: Personal y Nómina */}
-      {currentTab === 'personal' && (
+      {/* 2. View: Personal y Nómina */}
+      {currentView === 'personal' && (
         <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">Personal Operativo y Asistencia</h2>
-              <p className="text-xs text-slate-500">
-                Control de cuadrillas, salarios diarios, productividad y pases de lista
-              </p>
-            </div>
-            <span className="text-xs font-semibold px-3 py-1 bg-emerald-50 text-emerald-800 rounded-lg">
-              {workers.filter((w) => w.attendanceToday === 'presente').length} de {workers.length} Presentes Hoy
-            </span>
-          </div>
-
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
@@ -296,27 +271,9 @@ export const OperationsView: React.FC = () => {
         </div>
       )}
 
-      {/* Sub-view: Compras y Almacén */}
-      {currentTab === 'almacen' && (
+      {/* 3. View: Compras y Almacén */}
+      {currentView === 'almacen' && (
         <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">Catálogo de Insumos y Almacén</h2>
-              <p className="text-xs text-slate-500">
-                Control de inventarios, existencias mínimas, lotes y costos unitarios
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="text"
-                placeholder="Buscar insumo..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="px-3 py-1.5 text-xs border border-slate-200 rounded-lg focus:outline-hidden focus:ring-1 focus:ring-emerald-500"
-              />
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {inventory
               .filter((item) => item.name.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -360,18 +317,9 @@ export const OperationsView: React.FC = () => {
         </div>
       )}
 
-      {/* Sub-view: Activos e Infraestructura */}
-      {currentTab === 'activos' && (
+      {/* 4. View: Activos e Infraestructura */}
+      {currentView === 'activos' && (
         <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">Activos, Infraestructura & Mantenimiento</h2>
-              <p className="text-xs text-slate-500">
-                Cámaras frías, cabezales de riego, tractores y camionetas térmicas
-              </p>
-            </div>
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {equipment.map((eq) => (
               <div key={eq.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">

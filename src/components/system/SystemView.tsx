@@ -12,12 +12,14 @@ import {
   Activity,
   Plus,
   Sparkles,
+  Users,
 } from 'lucide-react';
 import { useGreenhouse } from '../../context/GreenhouseContext';
 import { ROLES } from '../../types/greenhouse';
 
 export const SystemView: React.FC = () => {
   const {
+    activeView,
     isOnline,
     offlineQueue,
     syncOfflineQueue,
@@ -25,11 +27,10 @@ export const SystemView: React.FC = () => {
     modules,
     addHarvest,
     addIrrigation,
-    addAuditLog,
   } = useGreenhouse();
 
   // Field quick capture mode
-  const [quickMode, setQuickMode] = useState<'corte' | 'riego' | 'monitoreo'>('corte');
+  const [quickMode, setQuickMode] = useState<'corte' | 'riego'>('corte');
   const [fieldModule, setFieldModule] = useState(modules[0]?.code || 'M-01');
   const [tallyCount, setTallyCount] = useState<number>(0);
   const [phInputVal, setPhInputVal] = useState<string>('5.8');
@@ -89,6 +90,15 @@ export const SystemView: React.FC = () => {
     setTimeout(() => setConfirmationNotice(null), 3000);
   };
 
+  const currentView =
+    activeView === 'offline'
+      ? 'offline'
+      : activeView === 'auditoria'
+      ? 'auditoria'
+      : activeView === 'sensores'
+      ? 'sensores'
+      : 'campo';
+
   return (
     <div className="space-y-6">
       {/* System & Support Header */}
@@ -99,14 +109,26 @@ export const SystemView: React.FC = () => {
             Soporte Técnico, Tecnología & Operadores en Campo
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
-            Captura Táctil de Campo, Sincronización e IoT
+            {currentView === 'offline'
+              ? 'Sincronización & Almacenamiento Offline'
+              : currentView === 'auditoria'
+              ? 'Auditoría, Usuarios & Permisos RBAC'
+              : currentView === 'sensores'
+              ? 'Integración IoT, Sensores & Básculas Digitales'
+              : 'Consola Táctil de Campo (Ergonomía Solar)'}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Herramienta ergonómica de captura rápida bajo luz solar y control de cola offline
+            {currentView === 'offline'
+              ? 'Gestión de registros almacenados localmente y sincronización con el servidor'
+              : currentView === 'auditoria'
+              ? 'Seguridad criptográfica, permisos por rol y bitácora inmutable de eventos'
+              : currentView === 'sensores'
+              ? 'Conexión a estaciones climáticas, tensiómetros Teros 12 y básculas de empaque'
+              : 'Botones de alto contraste y respuesta táctil para operarios con guantes en surco'}
           </p>
         </div>
 
-        {/* Online / Offline Sync button */}
+        {/* Online / Offline Sync badge */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 bg-slate-50 text-xs font-semibold">
             {isOnline ? (
@@ -134,198 +156,268 @@ export const SystemView: React.FC = () => {
         </div>
       </div>
 
-      {/* Touchpad for Operators in Greenhouse */}
-      <div className="bg-gradient-to-br from-slate-900 to-emerald-950 rounded-2xl p-6 text-white shadow-xl space-y-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-emerald-800/60">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-500/20 rounded-xl">
-              <Tablet className="w-6 h-6 text-emerald-400" />
+      {/* 1. View: Consola Táctil de Campo */}
+      {currentView === 'campo' && (
+        <div className="bg-gradient-to-br from-slate-900 to-emerald-950 rounded-2xl p-5 sm:p-6 text-white shadow-xl space-y-5">
+          <div className="flex items-center justify-between pb-3 border-b border-emerald-800/60">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                Modo de Captura Rápida:
+              </span>
             </div>
-            <div>
-              <h2 className="text-base sm:text-lg font-bold">Consola Táctil de Campo (Ergonomía Solar)</h2>
-              <p className="text-xs text-emerald-300">
-                Botones gigantes para registro con guantes en surcos e invernaderos
-              </p>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl">
-            <button
-              onClick={() => setQuickMode('corte')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                quickMode === 'corte' ? 'bg-emerald-500 text-white' : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              Corte de Tallos
-            </button>
-            <button
-              onClick={() => setQuickMode('riego')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
-                quickMode === 'riego' ? 'bg-emerald-500 text-white' : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              Lectura pH/CE
-            </button>
-          </div>
-        </div>
-
-        {confirmationNotice && (
-          <div className="p-3 bg-emerald-500/30 border border-emerald-400 rounded-xl text-xs sm:text-sm font-bold text-emerald-200 flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-            {confirmationNotice}
-          </div>
-        )}
-
-        {/* Module Selector Big Buttons */}
-        <div>
-          <label className="text-xs font-bold uppercase tracking-wider text-emerald-400 block mb-2">
-            1. Selecciona el Invernadero / Módulo:
-          </label>
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-            {modules.map((m) => (
+            <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl">
               <button
-                key={m.id}
-                onClick={() => setFieldModule(m.code)}
-                className={`py-3 rounded-xl font-black text-sm transition-all border ${
-                  fieldModule === m.code
-                    ? 'bg-emerald-500 text-white border-emerald-300 shadow-lg scale-102'
-                    : 'bg-white/10 text-slate-300 border-white/10 hover:bg-white/20'
+                onClick={() => setQuickMode('corte')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                  quickMode === 'corte' ? 'bg-emerald-500 text-white' : 'text-slate-300 hover:text-white'
                 }`}
               >
-                {m.code}
+                Corte de Tallos
               </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Mode Corte */}
-        {quickMode === 'corte' && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between bg-black/30 p-4 rounded-xl border border-white/10">
-              <span className="text-xs font-bold text-slate-300 uppercase">Contador de Tallos:</span>
-              <div className="text-3xl sm:text-4xl font-black text-emerald-400 tracking-wider">
-                {tallyCount.toLocaleString()}{' '}
-                <span className="text-xs font-normal text-slate-400">
-                  ({Math.floor(tallyCount / 25)} paquetes de 25)
-                </span>
-              </div>
+              <button
+                onClick={() => setQuickMode('riego')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+                  quickMode === 'riego' ? 'bg-emerald-500 text-white' : 'text-slate-300 hover:text-white'
+                }`}
+              >
+                Lectura pH/CE
+              </button>
             </div>
+          </div>
 
-            {/* Big Numeric Bumpers */}
-            <div className="grid grid-cols-4 gap-2 sm:gap-3">
-              {[+25, +50, +100, +250].map((inc) => (
+          {confirmationNotice && (
+            <div className="p-3 bg-emerald-500/30 border border-emerald-400 rounded-xl text-xs sm:text-sm font-bold text-emerald-200 flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+              {confirmationNotice}
+            </div>
+          )}
+
+          {/* Module Selector Big Buttons */}
+          <div>
+            <label className="text-xs font-bold uppercase tracking-wider text-emerald-400 block mb-2">
+              1. Selecciona el Invernadero / Módulo:
+            </label>
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+              {modules.map((m) => (
                 <button
-                  key={inc}
-                  onClick={() => setTallyCount((prev) => prev + inc)}
-                  className="py-4 bg-emerald-600/60 hover:bg-emerald-600 active:scale-95 text-white font-black text-lg rounded-xl border border-emerald-400/40 transition shadow-xs"
+                  key={m.id}
+                  onClick={() => setFieldModule(m.code)}
+                  className={`py-3 rounded-xl font-black text-sm transition-all border ${
+                    fieldModule === m.code
+                      ? 'bg-emerald-500 text-white border-emerald-300 shadow-lg scale-102'
+                      : 'bg-white/10 text-slate-300 border-white/10 hover:bg-white/20'
+                  }`}
                 >
-                  +{inc}
+                  {m.code}
                 </button>
               ))}
             </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => setTallyCount(0)}
-                className="py-3 px-5 bg-white/10 hover:bg-white/20 text-slate-300 rounded-xl text-xs font-bold transition"
-              >
-                Reiniciar
-              </button>
-              <button
-                onClick={handleQuickHarvestSubmit}
-                disabled={tallyCount === 0}
-                className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-400 active:scale-98 disabled:opacity-50 text-slate-950 font-black text-sm rounded-xl transition shadow-lg"
-              >
-                Guardar Corte de {tallyCount} Tallos en {fieldModule}
-              </button>
-            </div>
           </div>
-        )}
 
-        {/* Mode Riego & pH */}
-        {quickMode === 'riego' && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="bg-black/30 p-4 rounded-xl border border-white/10 space-y-2">
-                <label className="text-xs font-bold text-slate-300 block">pH Entrada Gotero:</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={phInputVal}
-                    onChange={(e) => setPhInputVal(e.target.value)}
-                    className="w-full text-2xl font-black bg-white/10 text-emerald-300 px-3 py-2 rounded-lg border border-white/20 text-center"
-                  />
-                  <span className="text-xs text-slate-400">(Meta: 5.8)</span>
+          {/* Mode Corte */}
+          {quickMode === 'corte' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between bg-black/30 p-4 rounded-xl border border-white/10">
+                <span className="text-xs font-bold text-slate-300 uppercase">Contador de Tallos:</span>
+                <div className="text-3xl sm:text-4xl font-black text-emerald-400 tracking-wider">
+                  {tallyCount.toLocaleString()}{' '}
+                  <span className="text-xs font-normal text-slate-400">
+                    ({Math.floor(tallyCount / 25)} paquetes de 25)
+                  </span>
                 </div>
               </div>
 
-              <div className="bg-black/30 p-4 rounded-xl border border-white/10 space-y-2">
-                <label className="text-xs font-bold text-slate-300 block">Conductividad CE (dS/m):</label>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    step="0.05"
-                    value={ecInputVal}
-                    onChange={(e) => setEcInputVal(e.target.value)}
-                    className="w-full text-2xl font-black bg-white/10 text-emerald-300 px-3 py-2 rounded-lg border border-white/20 text-center"
-                  />
-                  <span className="text-xs text-slate-400">(Meta: 1.6)</span>
-                </div>
+              {/* Big Numeric Bumpers */}
+              <div className="grid grid-cols-4 gap-2 sm:gap-3">
+                {[+25, +50, +100, +250].map((inc) => (
+                  <button
+                    key={inc}
+                    onClick={() => setTallyCount((prev) => prev + inc)}
+                    className="py-4 bg-emerald-600/60 hover:bg-emerald-600 active:scale-95 text-white font-black text-lg rounded-xl border border-emerald-400/40 transition shadow-xs"
+                  >
+                    +{inc}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setTallyCount(0)}
+                  className="py-3 px-5 bg-white/10 hover:bg-white/20 text-slate-300 rounded-xl text-xs font-bold transition"
+                >
+                  Reiniciar
+                </button>
+                <button
+                  onClick={handleQuickHarvestSubmit}
+                  disabled={tallyCount === 0}
+                  className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-400 active:scale-98 disabled:opacity-50 text-slate-950 font-black text-sm rounded-xl transition shadow-lg"
+                >
+                  Guardar Corte de {tallyCount} Tallos en {fieldModule}
+                </button>
               </div>
             </div>
+          )}
 
+          {/* Mode Riego & pH */}
+          {quickMode === 'riego' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-black/30 p-4 rounded-xl border border-white/10 space-y-2">
+                  <label className="text-xs font-bold text-slate-300 block">pH Entrada Gotero:</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={phInputVal}
+                      onChange={(e) => setPhInputVal(e.target.value)}
+                      className="w-full text-2xl font-black bg-white/10 text-emerald-300 px-3 py-2 rounded-lg border border-white/20 text-center"
+                    />
+                    <span className="text-xs text-slate-400">(Meta: 5.8)</span>
+                  </div>
+                </div>
+
+                <div className="bg-black/30 p-4 rounded-xl border border-white/10 space-y-2">
+                  <label className="text-xs font-bold text-slate-300 block">Conductividad CE (dS/m):</label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      step="0.05"
+                      value={ecInputVal}
+                      onChange={(e) => setEcInputVal(e.target.value)}
+                      className="w-full text-2xl font-black bg-white/10 text-emerald-300 px-3 py-2 rounded-lg border border-white/20 text-center"
+                    />
+                    <span className="text-xs text-slate-400">(Meta: 1.6)</span>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={handleQuickIrrigationSubmit}
+                className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 active:scale-98 text-slate-950 font-black text-sm rounded-xl transition shadow-lg"
+              >
+                Registrar Lectura Nutricional en {fieldModule}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 2. View: Offline y Sincronización */}
+      {currentView === 'offline' && (
+        <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
+          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h2 className="text-base font-bold text-slate-900">Estado de Sincronización y Cola Local</h2>
+              <p className="text-xs text-slate-500">
+                Los datos se guardan en el dispositivo y se transmiten automáticamente
+              </p>
+            </div>
             <button
-              onClick={handleQuickIrrigationSubmit}
-              className="w-full py-3 bg-emerald-500 hover:bg-emerald-400 active:scale-98 text-slate-950 font-black text-sm rounded-xl transition shadow-lg"
+              onClick={syncOfflineQueue}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-semibold hover:bg-emerald-700 transition"
             >
-              Registrar Lectura Nutricional en {fieldModule}
+              <RefreshCw className="w-4 h-4" />
+              <span>Sincronizar Ahora</span>
             </button>
           </div>
-        )}
-      </div>
 
-      {/* Technological Architecture & Future Integrations */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-          <div className="p-2.5 bg-purple-50 text-purple-700 w-fit rounded-xl">
-            <Cpu className="w-5 h-5" />
+          <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Database className="w-5 h-5 text-emerald-600" />
+              <div>
+                <span className="font-bold text-slate-900 text-xs block">Registros Pendientes en Cola</span>
+                <span className="text-xs text-slate-500">
+                  {offlineQueue.length === 0 ? 'Sin registros pendientes (100% sincronizado)' : `${offlineQueue.length} registros listos para enviar`}
+                </span>
+              </div>
+            </div>
+            <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800">
+              {offlineQueue.length}
+            </span>
           </div>
-          <h3 className="font-bold text-slate-900 text-sm">Integración con Sensores IoT</h3>
-          <p className="text-xs text-slate-600">
-            Conexión lista con estaciones meteorológicas Davis/OnSet, sensores de humedad de sustrato (Teros 12) y controladores Priva / Netafim NMC.
-          </p>
-          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full inline-block">
-            MQTT / REST API Ready
-          </span>
         </div>
+      )}
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-          <div className="p-2.5 bg-blue-50 text-blue-700 w-fit rounded-xl">
-            <Scale className="w-5 h-5" />
+      {/* 3. View: Auditoría y Roles */}
+      {currentView === 'auditoria' && (
+        <div className="space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3">
+            <h3 className="text-sm font-bold text-slate-900">Control de Acceso Basado en Roles (RBAC)</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {ROLES.map((role) => (
+                <div key={role.id} className="p-3 rounded-xl border border-slate-200 bg-slate-50 space-y-1">
+                  <span className="text-xs font-bold text-slate-900 block">{role.title}</span>
+                  <span className="text-[10px] text-slate-500 block">{role.badge}</span>
+                  <span className="text-[10px] font-bold text-emerald-700 block">Acceso Acreditado</span>
+                </div>
+              ))}
+            </div>
           </div>
-          <h3 className="font-bold text-slate-900 text-sm">Básculas de Empaque Digital</h3>
-          <p className="text-xs text-slate-600">
-            Pesaaje automático de bonches de 25 tallos para certificar gramaje mínimo de exportación y generar etiquetas de código de barras.
-          </p>
-          <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full inline-block">
-            Serial / Bluetooth LE Ready
-          </span>
-        </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
-          <div className="p-2.5 bg-emerald-50 text-emerald-700 w-fit rounded-xl">
-            <ShieldCheck className="w-5 h-5" />
+          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3">
+            <h3 className="text-sm font-bold text-slate-900">Bitácora de Trazabilidad Técnica</h3>
+            <div className="space-y-2">
+              {auditLogs.slice(0, 8).map((log) => (
+                <div key={log.id} className="p-3 rounded-xl bg-slate-50 border border-slate-200/60 flex items-center justify-between text-xs">
+                  <div>
+                    <span className="font-bold text-emerald-800 uppercase text-[10px] mr-2">[{log.userRole}]</span>
+                    <strong className="text-slate-800">{log.action}</strong>
+                    <p className="text-[11px] text-slate-500 mt-0.5">{log.details}</p>
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-medium whitespace-nowrap ml-2">
+                    {log.timestamp}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-          <h3 className="font-bold text-slate-900 text-sm">Auditoría & Roles (RBAC)</h3>
-          <p className="text-xs text-slate-600">
-            Control de accesos estrictos para los 6 roles. Los operarios solo capturan labores y corte; finanzas y costos restringidos a Dirección.
-          </p>
-          <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full inline-block">
-            Seguridad Criptográfica Activa
-          </span>
         </div>
-      </div>
+      )}
+
+      {/* 4. View: Sensores IoT y Básculas */}
+      {currentView === 'sensores' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+            <div className="p-2.5 bg-purple-50 text-purple-700 w-fit rounded-xl">
+              <Cpu className="w-5 h-5" />
+            </div>
+            <h3 className="font-bold text-slate-900 text-sm">Sensores Climáticos en Naves</h3>
+            <p className="text-xs text-slate-600">
+              Integración con sensores de temperatura, humedad relativa y radiación solar en los módulos M-01 a M-06.
+            </p>
+            <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full inline-block">
+              Lectura en Tiempo Real Activa
+            </span>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+            <div className="p-2.5 bg-blue-50 text-blue-700 w-fit rounded-xl">
+              <Scale className="w-5 h-5" />
+            </div>
+            <h3 className="font-bold text-slate-900 text-sm">Básculas de Empaque Digital</h3>
+            <p className="text-xs text-slate-600">
+              Pesaaje de paquetes de 25 tallos para certificar gramaje mínimo de exportación y calibración de tara.
+            </p>
+            <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2.5 py-0.5 rounded-full inline-block">
+              Puerto Serie / Bluetooth Activo
+            </span>
+          </div>
+
+          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3">
+            <div className="p-2.5 bg-emerald-50 text-emerald-700 w-fit rounded-xl">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <h3 className="font-bold text-slate-900 text-sm">Integridad de Sensores</h3>
+            <p className="text-xs text-slate-600">
+              Verificación de continuidad en lecturas de pH y CE en cabezal de fertirrigación.
+            </p>
+            <span className="text-[10px] font-bold text-purple-700 bg-purple-50 px-2.5 py-0.5 rounded-full inline-block">
+              Calibración al 100%
+            </span>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

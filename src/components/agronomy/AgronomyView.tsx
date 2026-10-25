@@ -6,13 +6,11 @@ import {
   PlusCircle,
   CheckCircle2,
   AlertTriangle,
-  Activity,
-  Calendar,
   Clock,
   Layers,
   FlaskConical,
-  Flame,
-  Camera,
+  Activity,
+  Calendar,
 } from 'lucide-react';
 import { useGreenhouse } from '../../context/GreenhouseContext';
 import { CulturalTask, IrrigationLog, PestMonitoring, PhytosanitaryApplication } from '../../types/greenhouse';
@@ -32,14 +30,11 @@ export const AgronomyView: React.FC = () => {
     addApplication,
   } = useGreenhouse();
 
-  const [tab, setTab] = useState<'labores' | 'riego' | 'sanidad'>(
-    activeView === 'riego' ? 'riego' : activeView === 'sanidad' ? 'sanidad' : 'labores'
-  );
-
   // Modals
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [showIrrigationModal, setShowIrrigationModal] = useState(false);
   const [showMonitoringModal, setShowMonitoringModal] = useState(false);
+  const [showAppModal, setShowAppModal] = useState(false);
 
   // Task form
   const [taskModule, setTaskModule] = useState(modules[0]?.code || 'M-01');
@@ -66,6 +61,16 @@ export const AgronomyView: React.FC = () => {
   const [monSeverity, setMonSeverity] = useState<PestMonitoring['severity']>('media');
   const [monIncidence, setMonIncidence] = useState('7.5');
   const [monNotes, setMonNotes] = useState('');
+
+  // Application form
+  const [appModule, setAppModule] = useState(modules[0]?.code || 'M-01');
+  const [appTarget, setAppTarget] = useState('Araña Roja (Tetranychus)');
+  const [appProduct, setAppProduct] = useState('Abamectina 1.8% EC');
+  const [appIngredient, setAppIngredient] = useState('Abamectina');
+  const [appDose, setAppDose] = useState('75 ml / 100L');
+  const [appVolume, setAppVolume] = useState('800');
+  const [appReentry, setAppReentry] = useState('24');
+  const [appCost, setAppCost] = useState('1850');
 
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -127,9 +132,36 @@ export const AgronomyView: React.FC = () => {
     setShowMonitoringModal(false);
   };
 
+  const handleCreateApplication = (e: React.FormEvent) => {
+    e.preventDefault();
+    const newApp: PhytosanitaryApplication = {
+      id: `app-${Date.now()}`,
+      date: new Date().toISOString().slice(0, 10),
+      moduleId: modules.find((m) => m.code === appModule)?.id || 'mod-1',
+      moduleCode: appModule,
+      targetPest: appTarget,
+      productName: appProduct,
+      activeIngredient: appIngredient,
+      dosePer100L: appDose,
+      waterVolumeLiters: parseInt(appVolume) || 800,
+      treatedAreaM2: 5000,
+      operator: 'Juan Pablo Ortiz',
+      safetyEquipment: 'Overol Tyvek, Mascarilla con filtros ABEK1P3, Guantes nitrilo',
+      reentryHours: parseInt(appReentry) || 24,
+      costTotal: parseFloat(appCost) || 1500,
+      status: 'aplicada',
+      efficacyPercent: 95,
+    };
+    addApplication(newApp);
+    setShowAppModal(false);
+  };
+
+  // Determine current active view from sidebar without duplicate horizontal tabs
+  const currentView = activeView === 'riego' ? 'riego' : activeView === 'sanidad' ? 'sanidad' : 'labores';
+
   return (
     <div className="space-y-6">
-      {/* Agronomy Header */}
+      {/* Agronomy Header (Clean, without horizontal duplicate tab bar) */}
       <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-emerald-800">
@@ -137,56 +169,71 @@ export const AgronomyView: React.FC = () => {
             Ingeniería Agronómica & Sanidad Vegetal
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
-            Nutrición, Riego y Control Fitosanitario
+            {currentView === 'riego'
+              ? 'Riego, Fertirrigación & Nutrición Vegetal'
+              : currentView === 'sanidad'
+              ? 'Sanidad Vegetal & Control Fitosanitario'
+              : 'Labores Culturales & Manejo del Cultivo'}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Monitoreo agronómico de pH/CE, tensiómetros, labores culturales y recetas
+            {currentView === 'riego'
+              ? 'Monitoreo de pH, CE de drenaje, tensiómetros en cbars y tanques concentrados A y B'
+              : currentView === 'sanidad'
+              ? 'Monitoreo de plagas, severidad, recetas fitosanitarias y periodos de reingreso'
+              : 'Tutoreo, desahije, desbotonado/pinch, poda, toque de hoja y avance de camas'}
           </p>
         </div>
 
-        {/* Tab switch */}
-        <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl text-xs font-semibold">
-          <button
-            onClick={() => setTab('labores')}
-            className={`px-3 py-1.5 rounded-lg transition ${
-              tab === 'labores' ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Labores Culturales ({tasks.length})
-          </button>
-          <button
-            onClick={() => setTab('riego')}
-            className={`px-3 py-1.5 rounded-lg transition ${
-              tab === 'riego' ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Riego & Tanques A/B ({irrigation.length})
-          </button>
-          <button
-            onClick={() => setTab('sanidad')}
-            className={`px-3 py-1.5 rounded-lg transition ${
-              tab === 'sanidad' ? 'bg-white text-emerald-700 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Sanidad & Plagas ({pestMonitoring.length})
-          </button>
-        </div>
-      </div>
-
-      {/* Labores Culturales Tab */}
-      {tab === 'labores' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-base font-bold text-slate-900">
-              Programación y Avance de Labores en Módulos
-            </h2>
+        {/* Action Button for Current View */}
+        <div>
+          {currentView === 'labores' && (
             <button
               onClick={() => setShowTaskModal(true)}
-              className="flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs"
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Programar Labor</span>
             </button>
+          )}
+
+          {currentView === 'riego' && (
+            <button
+              onClick={() => setShowIrrigationModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Registrar Riego & Nutrición</span>
+            </button>
+          )}
+
+          {currentView === 'sanidad' && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setShowMonitoringModal(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Monitorear Plaga</span>
+              </button>
+              <button
+                onClick={() => setShowAppModal(true)}
+                className="flex items-center gap-2 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs sm:text-sm font-semibold transition border border-slate-200"
+              >
+                <FlaskConical className="w-4 h-4 text-emerald-600" />
+                <span>Aplicación Fitosanitaria</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 1. View: Labores Culturales */}
+      {currentView === 'labores' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm sm:text-base font-bold text-slate-900">
+              Programación y Avance de Labores en Módulos ({tasks.length})
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -207,12 +254,12 @@ export const AgronomyView: React.FC = () => {
                           : 'bg-slate-100 text-slate-600'
                       }`}
                     >
-                      {t.status}
+                      {t.status.replace('_', ' ')}
                     </span>
                   </div>
 
                   <h3 className="font-bold text-slate-900 text-xs sm:text-sm">{t.taskName}</h3>
-                  <p className="text-[11px] text-slate-500">Asignado: {t.assignedTeam} ({t.date})</p>
+                  <p className="text-[11px] text-slate-500">Asignado a: {t.assignedTeam} ({t.date})</p>
 
                   {/* Progress bar */}
                   <div className="space-y-1">
@@ -255,23 +302,32 @@ export const AgronomyView: React.FC = () => {
         </div>
       )}
 
-      {/* Riego & Fertirrigación Tab */}
-      {tab === 'riego' && (
+      {/* 2. View: Riego & Fertirrigación */}
+      {currentView === 'riego' && (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">
-                Lecturas de Riego, pH, CE y Tensiómetros
-              </h2>
-              <p className="text-xs text-slate-500">Monitoreo de gotero vs drenaje y recetas de tanques concentrados</p>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-xs">
+              <span className="text-[11px] text-slate-500 block font-medium">Volumen Total Aplicado</span>
+              <span className="text-xl font-black text-blue-700 mt-1 block">
+                {irrigation.reduce((acc, i) => acc + i.volumeM3, 0).toFixed(1)} m³
+              </span>
+              <span className="text-[10px] text-slate-400">En todos los sectores</span>
             </div>
-            <button
-              onClick={() => setShowIrrigationModal(true)}
-              className="flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Registrar Riego</span>
-            </button>
+            <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-xs">
+              <span className="text-[11px] text-slate-500 block font-medium">pH Promedio Entrada</span>
+              <span className="text-xl font-black text-emerald-800 mt-1 block">5.8</span>
+              <span className="text-[10px] text-emerald-700 font-semibold">Rango óptimo para Rosa</span>
+            </div>
+            <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-xs">
+              <span className="text-[11px] text-slate-500 block font-medium">Conductividad CE</span>
+              <span className="text-xl font-black text-slate-900 mt-1 block">1.65 dS/m</span>
+              <span className="text-[10px] text-slate-400">Drenaje en 1.95 dS/m</span>
+            </div>
+            <div className="p-3.5 bg-white rounded-xl border border-slate-200 shadow-xs">
+              <span className="text-[11px] text-slate-500 block font-medium">Tensiómetros Suelo</span>
+              <span className="text-xl font-black text-emerald-800 mt-1 block">18 cbars</span>
+              <span className="text-[10px] text-slate-400">Capacidad de campo</span>
+            </div>
           </div>
 
           <div className="space-y-3">
@@ -322,8 +378,8 @@ export const AgronomyView: React.FC = () => {
                 </div>
 
                 <div className="text-[11px] text-slate-600 space-y-1 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                  <p><strong>Tanque A (Calcio / N):</strong> {irg.tankARecipe}</p>
-                  <p><strong>Tanque B (Fósforo / K / Mg):</strong> {irg.tankBRecipe}</p>
+                  <p><strong>Tanque A (Calcio / Nitrógeno):</strong> {irg.tankARecipe}</p>
+                  <p><strong>Tanque B (Fósforo / Potasio / Magnesio):</strong> {irg.tankBRecipe}</p>
                 </div>
               </div>
             ))}
@@ -331,59 +387,82 @@ export const AgronomyView: React.FC = () => {
         </div>
       )}
 
-      {/* Sanidad & Plagas Tab */}
-      {tab === 'sanidad' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">Monitoreo Fitosanitario & Tratamientos</h2>
-              <p className="text-xs text-slate-500">Severidad de plagas, intervalos de reingreso y eficacia</p>
+      {/* 3. View: Sanidad Vegetal */}
+      {currentView === 'sanidad' && (
+        <div className="space-y-5">
+          {/* Monitoreo Section */}
+          <div className="space-y-3">
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider text-slate-500">
+              Monitoreo Activo de Plagas y Enfermedades
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {pestMonitoring.map((pm) => (
+                <div
+                  key={pm.id}
+                  className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs space-y-2.5"
+                >
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
+                        {pm.moduleCode} • {pm.section}
+                      </span>
+                      <h3 className="font-bold text-slate-900 text-sm mt-1">{pm.pestName}</h3>
+                    </div>
+                    <span
+                      className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full capitalize ${
+                        pm.severity === 'alta' || pm.severity === 'critica'
+                          ? 'bg-rose-100 text-rose-800'
+                          : pm.severity === 'media'
+                          ? 'bg-amber-100 text-amber-800'
+                          : 'bg-emerald-100 text-emerald-800'
+                      }`}
+                    >
+                      Severidad: {pm.severity} ({pm.incidencePercent}%)
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
+                    {pm.notes}
+                  </p>
+
+                  <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
+                    <span>Fecha: {pm.date}</span>
+                    <span className="font-semibold text-emerald-700 capitalize">Estado: {pm.status.replace('_', ' ')}</span>
+                  </div>
+                </div>
+              ))}
             </div>
-            <button
-              onClick={() => setShowMonitoringModal(true)}
-              className="flex items-center gap-2 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Registrar Monitoreo</span>
-            </button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {pestMonitoring.map((pm) => (
-              <div
-                key={pm.id}
-                className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs space-y-2.5"
-              >
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700">
-                      {pm.moduleCode} • {pm.section}
+          {/* Aplicaciones Fitosanitarias Realizadas */}
+          <div className="space-y-3 pt-2">
+            <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider text-slate-500">
+              Aplicaciones Fitosanitarias y Tratamientos Ejecutados
+            </h3>
+            <div className="space-y-3">
+              {applications.map((app) => (
+                <div key={app.id} className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs space-y-2 text-xs">
+                  <div className="flex items-center justify-between pb-2 border-b border-slate-100">
+                    <span className="font-bold text-emerald-800 text-sm">
+                      {app.moduleCode} • {app.productName}
                     </span>
-                    <h3 className="font-bold text-slate-900 text-sm mt-1">{pm.pestName}</h3>
+                    <span className="font-bold text-slate-900">
+                      Costo: ${app.costTotal.toLocaleString()} MXN
+                    </span>
                   </div>
-                  <span
-                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full capitalize ${
-                      pm.severity === 'alta' || pm.severity === 'critica'
-                        ? 'bg-rose-100 text-rose-800'
-                        : pm.severity === 'media'
-                        ? 'bg-amber-100 text-amber-800'
-                        : 'bg-emerald-100 text-emerald-800'
-                    }`}
-                  >
-                    Severidad: {pm.severity} ({pm.incidencePercent}%)
-                  </span>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-slate-600">
+                    <div><span className="text-slate-400 block text-[10px]">Blanco Biológico:</span> {app.targetPest}</div>
+                    <div><span className="text-slate-400 block text-[10px]">Ingrediente Activo:</span> {app.activeIngredient}</div>
+                    <div><span className="text-slate-400 block text-[10px]">Dosis / 100L:</span> {app.dosePer100L}</div>
+                    <div><span className="text-slate-400 block text-[10px]">Reingreso Seguro:</span> {app.reentryHours} horas</div>
+                  </div>
+                  <div className="text-[11px] text-slate-500 pt-1 border-t border-slate-100 flex justify-between">
+                    <span>Aplicador: {app.operator} (EPI completo)</span>
+                    <span className="text-emerald-700 font-bold">Eficacia Evaluada: {app.efficacyPercent}%</span>
+                  </div>
                 </div>
-
-                <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-lg border border-slate-100">
-                  {pm.notes}
-                </p>
-
-                <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1">
-                  <span>Fecha: {pm.date}</span>
-                  <span className="font-semibold text-emerald-700 capitalize">Estado: {pm.status.replace('_', ' ')}</span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}
@@ -692,6 +771,119 @@ export const AgronomyView: React.FC = () => {
                   className="px-5 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700"
                 >
                   Guardar Monitoreo
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Aplicación Fitosanitaria */}
+      {showAppModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-xs text-xs">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100">
+            <h3 className="text-base font-bold text-slate-900 pb-3 border-b border-slate-100">
+              Programar Aplicación Fitosanitaria
+            </h3>
+            <form onSubmit={handleCreateApplication} className="mt-4 space-y-3">
+              <div>
+                <label className="block font-semibold text-slate-700 mb-1">Módulo</label>
+                <select
+                  value={appModule}
+                  onChange={(e) => setAppModule(e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                >
+                  {modules.map((m) => (
+                    <option key={m.id} value={m.code}>{m.code} - {m.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Plaga Objetivo</label>
+                  <input
+                    type="text"
+                    value={appTarget}
+                    onChange={(e) => setAppTarget(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Producto Comercial</label>
+                  <input
+                    type="text"
+                    value={appProduct}
+                    onChange={(e) => setAppProduct(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Ingrediente Activo</label>
+                  <input
+                    type="text"
+                    value={appIngredient}
+                    onChange={(e) => setAppIngredient(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Dosis por 100L</label>
+                  <input
+                    type="text"
+                    value={appDose}
+                    onChange={(e) => setAppDose(e.target.value)}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2">
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Caldo Total (L)</label>
+                  <input
+                    type="number"
+                    value={appVolume}
+                    onChange={(e) => setAppVolume(e.target.value)}
+                    className="w-full px-2 py-1.5 border border-slate-300 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Reingreso (hrs)</label>
+                  <input
+                    type="number"
+                    value={appReentry}
+                    onChange={(e) => setAppReentry(e.target.value)}
+                    className="w-full px-2 py-1.5 border border-slate-300 rounded-lg"
+                  />
+                </div>
+                <div>
+                  <label className="block font-semibold text-slate-700 mb-1">Costo ($ MXN)</label>
+                  <input
+                    type="number"
+                    value={appCost}
+                    onChange={(e) => setAppCost(e.target.value)}
+                    className="w-full px-2 py-1.5 border border-slate-300 rounded-lg"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAppModal(false)}
+                  className="px-4 py-2 border border-slate-300 rounded-lg font-semibold text-slate-600"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700"
+                >
+                  Guardar Aplicación
                 </button>
               </div>
             </form>

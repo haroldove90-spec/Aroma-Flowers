@@ -5,12 +5,6 @@ import {
   Wallet,
   ShoppingBag,
   PlusCircle,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-  Truck,
-  Phone,
-  Mail,
   Calendar,
   Sparkles,
 } from 'lucide-react';
@@ -27,14 +21,6 @@ export const SalesView: React.FC = () => {
     updateOrderStatus,
     addCustomer,
   } = useGreenhouse();
-
-  const [tab, setTab] = useState<'pedidos' | 'clientes' | 'cobranza' | 'temporadas'>(
-    activeView === 'clientes'
-      ? 'clientes'
-      : activeView === 'cobranza'
-      ? 'cobranza'
-      : 'pedidos'
-  );
 
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
@@ -108,9 +94,19 @@ export const SalesView: React.FC = () => {
     setShowCustomerModal(false);
   };
 
+  // Determine current active view from sidebar without duplicate horizontal tabs
+  const currentView =
+    activeView === 'clientes'
+      ? 'clientes'
+      : activeView === 'cobranza'
+      ? 'cobranza'
+      : activeView === 'temporadas'
+      ? 'temporadas'
+      : 'pedidos';
+
   return (
     <div className="space-y-6">
-      {/* Sales Header */}
+      {/* Sales Header (Clean, without horizontal duplicate tab bar) */}
       <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-800">
@@ -118,52 +114,50 @@ export const SalesView: React.FC = () => {
             Ventas, Clientes y Comercialización
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 mt-1">
-            Pedidos, Canales de Venta y Cuentas por Cobrar
+            {currentView === 'clientes'
+              ? 'Directorio de Clientes & Canales de Distribución'
+              : currentView === 'cobranza'
+              ? 'Gestión de Cobranza & Cartera por Cobrar'
+              : currentView === 'temporadas'
+              ? 'Análisis de Demanda & Fechas Especiales'
+              : 'Pedidos de Venta & Facturación de Flor'}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Despacho a Central de Abasto, florerías, exportación y cobro a crédito/contado
+            {currentView === 'clientes'
+              ? 'Central de Abasto CDMX, florerías regionales, exportación y límites de crédito'
+              : currentView === 'cobranza'
+              ? 'Control de plazos a 15 y 30 días, facturas vencidas y registro de liquidaciones'
+              : currentView === 'temporadas'
+              ? 'Estrategia de corte y fijación de precios para San Valentín y 10 de Mayo'
+              : 'Generación de notas de venta y descuento de producto terminado en cámara'}
           </p>
         </div>
 
-        {/* Tab switch */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl text-xs font-semibold">
-          <button
-            onClick={() => setTab('pedidos')}
-            className={`px-3 py-1.5 rounded-lg transition ${
-              tab === 'pedidos' ? 'bg-white text-amber-800 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Pedidos ({orders.length})
-          </button>
-          <button
-            onClick={() => setTab('clientes')}
-            className={`px-3 py-1.5 rounded-lg transition ${
-              tab === 'clientes' ? 'bg-white text-amber-800 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Clientes ({customers.length})
-          </button>
-          <button
-            onClick={() => setTab('cobranza')}
-            className={`px-3 py-1.5 rounded-lg transition ${
-              tab === 'cobranza' ? 'bg-white text-amber-800 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Cobranza & Créditos
-          </button>
-          <button
-            onClick={() => setTab('temporadas')}
-            className={`px-3 py-1.5 rounded-lg transition ${
-              tab === 'temporadas' ? 'bg-white text-amber-800 shadow-xs font-bold' : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Fechas Especiales
-          </button>
+        <div>
+          {currentView === 'pedidos' && (
+            <button
+              onClick={() => setShowOrderModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Nuevo Pedido</span>
+            </button>
+          )}
+
+          {currentView === 'clientes' && (
+            <button
+              onClick={() => setShowCustomerModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs"
+            >
+              <PlusCircle className="w-4 h-4" />
+              <span>Nuevo Cliente</span>
+            </button>
+          )}
         </div>
       </div>
 
       {/* KPI Highlights */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs">
           <span className="text-xs font-semibold text-slate-500 block">Facturación Acumulada</span>
           <span className="text-xl sm:text-2xl font-black text-slate-900 mt-1 block">
@@ -197,25 +191,9 @@ export const SalesView: React.FC = () => {
         </div>
       </div>
 
-      {/* Orders Tab */}
-      {tab === 'pedidos' && (
+      {/* 1. View: Pedidos */}
+      {currentView === 'pedidos' && (
         <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">Registro de Pedidos y Notas de Venta</h2>
-              <p className="text-xs text-slate-500">
-                Descuento automático de stock de paquetes de 25 en cámara fría
-              </p>
-            </div>
-            <button
-              onClick={() => setShowOrderModal(true)}
-              className="flex items-center gap-2 px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs sm:text-sm font-semibold transition shadow-xs self-start sm:self-auto"
-            >
-              <PlusCircle className="w-4 h-4" />
-              <span>Nuevo Pedido</span>
-            </button>
-          </div>
-
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead>
@@ -263,7 +241,7 @@ export const SalesView: React.FC = () => {
                       {o.status !== 'pagado' && (
                         <button
                           onClick={() => updateOrderStatus(o.id, 'pagado')}
-                          className="px-2 py-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 rounded hover:bg-emerald-100"
+                          className="px-2.5 py-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 rounded hover:bg-emerald-100"
                         >
                           Liquidar
                         </button>
@@ -277,60 +255,37 @@ export const SalesView: React.FC = () => {
         </div>
       )}
 
-      {/* Customers Tab */}
-      {tab === 'clientes' && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">Directorio de Clientes & Compradores</h2>
-              <p className="text-xs text-slate-500">Límites de crédito, plazos comerciales y saldos vigentes</p>
-            </div>
-            <button
-              onClick={() => setShowCustomerModal(true)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-semibold hover:bg-amber-700 transition"
-            >
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span>Nuevo Cliente</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {customers.map((c) => (
-              <div key={c.id} className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
-                      {c.channel}
-                    </span>
-                    <h3 className="font-bold text-slate-900 text-sm mt-1">{c.name}</h3>
-                  </div>
-                  <span className="text-xs font-black text-rose-700">
-                    Saldo: ${c.currentBalance.toLocaleString()}
+      {/* 2. View: Clientes */}
+      {currentView === 'clientes' && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {customers.map((c) => (
+            <div key={c.id} className="p-4 rounded-xl border border-slate-200 bg-white shadow-xs space-y-2">
+              <div className="flex items-start justify-between">
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
+                    {c.channel}
                   </span>
+                  <h3 className="font-bold text-slate-900 text-sm mt-1">{c.name}</h3>
                 </div>
-                <div className="text-xs text-slate-600 space-y-1 pt-1">
-                  <p>📍 {c.city}</p>
-                  <p>📞 {c.contactPhone} • ✉️ {c.email || 'Sin correo'}</p>
-                  <p className="text-[11px] text-slate-500">
-                    Plazo Crédito: <strong>{c.creditDays} días</strong> • Límite: ${c.creditLimit.toLocaleString()}
-                  </p>
-                </div>
+                <span className="text-xs font-black text-rose-700">
+                  Saldo: ${c.currentBalance.toLocaleString()}
+                </span>
               </div>
-            ))}
-          </div>
+              <div className="text-xs text-slate-600 space-y-1 pt-1">
+                <p>📍 {c.city}</p>
+                <p>📞 {c.contactPhone} • ✉️ {c.email || 'Sin correo'}</p>
+                <p className="text-[11px] text-slate-500">
+                  Plazo Crédito: <strong>{c.creditDays} días</strong> • Límite: ${c.creditLimit.toLocaleString()}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {/* Cobranza Tab */}
-      {tab === 'cobranza' && (
+      {/* 3. View: Cobranza */}
+      {currentView === 'cobranza' && (
         <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-            <div>
-              <h2 className="text-base font-bold text-slate-900">Gestión de Cobranza & Cartera Vencida</h2>
-              <p className="text-xs text-slate-500">Seguimiento puntual a facturas a crédito</p>
-            </div>
-          </div>
-
           <div className="space-y-3">
             {customers.filter((c) => c.currentBalance > 0).map((c) => (
               <div key={c.id} className="p-4 rounded-xl border border-rose-200 bg-rose-50/40 flex items-center justify-between">
@@ -352,38 +307,31 @@ export const SalesView: React.FC = () => {
         </div>
       )}
 
-      {/* Fechas Especiales Tab */}
-      {tab === 'temporadas' && (
-        <div className="bg-white rounded-2xl border border-slate-200 p-5 sm:p-6 shadow-xs space-y-4">
-          <div>
-            <h2 className="text-base font-bold text-slate-900">Análisis y Demanda por Temporadas Pico</h2>
-            <p className="text-xs text-slate-500">Programación de corte y fijación de precios para fechas clave</p>
+      {/* 4. View: Temporadas Especiales */}
+      {currentView === 'temporadas' && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="p-5 rounded-2xl border border-rose-200 bg-white shadow-xs space-y-2">
+            <span className="text-[10px] font-bold uppercase text-rose-700 bg-rose-50 px-2 py-0.5 rounded">14 Febrero</span>
+            <h3 className="font-bold text-slate-900 text-sm mt-1">San Valentín</h3>
+            <p className="text-xs text-slate-600">
+              Demanda pico de Rosa Freedom y Rosa Explorer. Precios proyectados suben a $280/bonche de 25.
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 rounded-xl border border-rose-200 bg-rose-50/50 space-y-2">
-              <span className="text-[10px] font-bold uppercase text-rose-700">14 Febrero</span>
-              <h3 className="font-bold text-slate-900 text-sm">San Valentín</h3>
-              <p className="text-xs text-slate-600">
-                Demanda pico de Rosa Freedom y Rosa Explorer. Precios proyectados suben a $280/bonche de 25.
-              </p>
-            </div>
+          <div className="p-5 rounded-2xl border border-amber-200 bg-white shadow-xs space-y-2">
+            <span className="text-[10px] font-bold uppercase text-amber-700 bg-amber-50 px-2 py-0.5 rounded">10 Mayo</span>
+            <h3 className="font-bold text-slate-900 text-sm mt-1">Día de las Madres</h3>
+            <p className="text-xs text-slate-600">
+              Variedades Mondial, Freedom y Gypsophila al 100% de capacidad. Máximo volumen nacional.
+            </p>
+          </div>
 
-            <div className="p-4 rounded-xl border border-amber-200 bg-amber-50/50 space-y-2">
-              <span className="text-[10px] font-bold uppercase text-amber-700">10 Mayo</span>
-              <h3 className="font-bold text-slate-900 text-sm">Día de las Madres</h3>
-              <p className="text-xs text-slate-600">
-                Variedades Mondial, Freedom y Gypsophila al 100% de capacidad. Máximo volumen nacional.
-              </p>
-            </div>
-
-            <div className="p-4 rounded-xl border border-purple-200 bg-purple-50/50 space-y-2">
-              <span className="text-[10px] font-bold uppercase text-purple-700">1 y 2 Noviembre</span>
-              <h3 className="font-bold text-slate-900 text-sm">Día de Muertos</h3>
-              <p className="text-xs text-slate-600">
-                Mercados locales y Central de Abasto con alta rotación de follajes y flores blancas/amarillas.
-              </p>
-            </div>
+          <div className="p-5 rounded-2xl border border-purple-200 bg-white shadow-xs space-y-2">
+            <span className="text-[10px] font-bold uppercase text-purple-700 bg-purple-50 px-2 py-0.5 rounded">1 y 2 Noviembre</span>
+            <h3 className="font-bold text-slate-900 text-sm mt-1">Día de Muertos</h3>
+            <p className="text-xs text-slate-600">
+              Mercados locales y Central de Abasto con alta rotación de follajes y flores blancas/amarillas.
+            </p>
           </div>
         </div>
       )}
