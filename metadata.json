@@ -1,0 +1,6 @@
+{
+  "name": "Aroma Flowers",
+  "description": "Sistema integral de gestión de invernadero florícola Aroma Flowers para alta dirección, operaciones, agronomía, empaque y comercialización.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
